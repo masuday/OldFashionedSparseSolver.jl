@@ -1,0 +1,13 @@
+name = "OldFashionedSparseSolver"
+uuid = "e45e2875-c06f-4a3c-ad1b-4dbff9d4f887"
+authors = ["Yutaka Masuda"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
