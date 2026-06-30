@@ -209,6 +209,34 @@ function nzstruct(As::Symmetric{Tv,SparseMatrixCSC{Tv,Ti}},perm::Vector{Ti}) whe
    return L
 end
 
+"""
+    ldlt!(L)
+
+Perform the numerical LDLt factorization in place.
+
+The factor object `L` must already have been prepared by `nzstruct` and filled
+with matrix values by `transfer!`. This function overwrites the numeric values
+stored in `L` with the LDLt factor and changes `L.status` to
+`"NumericalFactorization"`. It returns `nothing`.
+
+If a zero or nearly zero pivot is found during factorization, the corresponding
+column of the factor is filled with zeros. This provides the same generalized
+factorization behavior used by `spchol`, but it may be numerically unstable for
+some rank-deficient problems.
+
+### Examples
+```jldoctest
+julia> using AMD
+
+julia> perm = amd(A)
+
+julia> L = nzstruct(A, perm)
+
+julia> transfer!(A, L)
+
+julia> ldlt!(L)
+```
+"""
 function ldlt!(L::LDLtFactor)
    if L.status != "SymbolicFactorization"
       throw(ArgumentError("Factor not prepared"))
