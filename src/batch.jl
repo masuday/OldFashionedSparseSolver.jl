@@ -1,4 +1,20 @@
 
+"""
+    spshow(L; showfull=false)
+    spshow(A; showfull=true)
+
+Show the nonzero structure of a factor object `L` or a sparse matrix `A`.
+For a factor object, only the lower triangular structure is shown by default.
+For a sparse matrix, all stored entries are shown by default. Set `showfull`
+to change this behavior.
+
+### Examples
+```jldoctest
+julia> spshow(L)
+
+julia> spshow(A, showfull=false)
+```
+"""
 function spshow(L::LDLtFactor; showfull::Bool=false)
    if L.status == ""
       throw(ArgumentError("Nonzero structure undetermined"))
@@ -81,12 +97,36 @@ function transfer!(L::LDLtFactor,As::Symmetric{Tv,SparseMatrixCSC{Tv,Ti}}) where
    save_factor_to_sparse!(L.n, As, L.iperm, L.ia, L.ja, L.a)
 end
 
+"""
+    zero!(L)
+
+Clear the numerical values stored in `L` while keeping its nonzero structure.
+After calling this function, `L` is returned to the state after symbolic
+factorization and can be filled again with `transfer!`.
+
+### Examples
+```jldoctest
+julia> zero!(L)
+```
+"""
 function zero!(L::LDLtFactor)
    L.a = zeros(eltype(L.a),L.n)
    L.status = "SymbolicFactorization"
    return nothing
 end
 
+"""
+    F = Matrix(L; showall=false)
+
+Convert the factor object `L` to a dense matrix.
+By default, only the stored lower triangular part is returned. If `showall=true`,
+the stored values are mirrored to the upper triangular part.
+
+### Examples
+```jldoctest
+julia> F = Matrix(L)
+```
+"""
 function Matrix(L::LDLtFactor; showall::Bool=false)
    A = zeros(eltype(L.a),L.n,L.n)
    for j=1:L.n
@@ -101,6 +141,17 @@ function Matrix(L::LDLtFactor; showall::Bool=false)
    return A
 end
 
+"""
+    S = sparse(L)
+
+Convert the factor object `L` to a sparse matrix using the stored nonzero
+structure and values.
+
+### Examples
+```jldoctest
+julia> S = sparse(L)
+```
+"""
 function sparse(L::LDLtFactor)
    if L.status == ""
       throw(ArgumentError("Factor not initialized"))
@@ -108,6 +159,19 @@ function sparse(L::LDLtFactor)
    return SparseMatrixCSC(L.n,L.n,L.ia,L.ja,L.a)
 end
 
+"""
+    d = diag(L)
+    d = diag(L, perm)
+
+Return the diagonal values stored in the factor object `L`.
+If a permutation vector `perm` is provided, the returned diagonal values are
+placed according to that permutation.
+
+### Examples
+```jldoctest
+julia> d = diag(L)
+```
+"""
 function diag(L::LDLtFactor)
    d = zeros(eltype(L.a),L.n)
    for j=1:L.n
@@ -134,6 +198,18 @@ function diag(L::LDLtFactor, perm::Vector{T}) where T
    return d
 end
 
+"""
+    d, T = getfactor(L)
+
+Return the diagonal and off-diagonal parts stored in the factor object `L`.
+The vector `d` contains the diagonal values, and the sparse matrix `T` contains
+the remaining stored values with the diagonal entries set to zero.
+
+### Examples
+```jldoctest
+julia> d, T = getfactor(L)
+```
+"""
 function getfactor(L::LDLtFactor)
    n = copy(L.n)
    ia = copy(L.ia)
@@ -154,6 +230,18 @@ function getfactor(L::LDLtFactor)
    return d,T
 end
 
+"""
+    r = rank(L, tol=1e-9)
+
+Estimate the rank from the diagonal values stored in the factor object `L`.
+The returned value is the number of diagonal entries whose absolute value is
+greater than `tol`.
+
+### Examples
+```jldoctest
+julia> r = rank(L)
+```
+"""
 function rank(L::LDLtFactor, tol=1e-9)
    return sum(abs.(diag(L)) .> tol)
 end
