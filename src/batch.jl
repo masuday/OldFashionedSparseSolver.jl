@@ -110,7 +110,7 @@ julia> zero!(L)
 ```
 """
 function zero!(L::LDLtFactor)
-   L.a = zeros(eltype(L.a),L.n)
+   fill!(L.a, zero(eltype(L.a)))
    L.status = "SymbolicFactorization"
    return nothing
 end
