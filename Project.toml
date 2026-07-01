@@ -1,7 +1,7 @@
 name = "OldFashionedSparseSolver"
 uuid = "5c6bbbd7-1565-41a3-beb1-cc79c96bf333"
 authors = ["Yutaka Masuda"]
-version = "0.5.1"
+version = "0.6.0"
 
 [deps]
 AMD = "14f7f29c-3bd6-536c-9a0b-7339e30b5a3e"
