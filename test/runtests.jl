@@ -157,3 +157,31 @@ end
 
    @test_throws DimensionMismatch spinv!(L, B)
 end
+
+@testset "sparse inverse corner-case checks" begin
+   A = sparse([
+       1.2   0.0  -0.1  -0.1  0.0  0.0  0.0
+       0.0   1.1  -0.1   0.0  0.0  0.0  0.0
+      -0.1  -0.1   1.2   0.0  0.0  0.0  0.0
+      -0.1   0.0   0.0   1.1  0.0  0.0  0.0
+       0.0   0.0   0.0   0.0  1.0  0.0  0.0
+       0.0   0.0   0.0   0.0  0.0  2.0  1.0
+       0.0   0.0   0.0   0.0  0.0  1.0  2.0 
+   ])
+   n = size(A, 1)
+   B = copy(A)
+   perm = collect(1:n)
+   L = spchol(A, perm)
+   spinv!(L)
+   transfer!(L, B)
+
+   C = inv(Matrix(A))
+
+   for j=1:n
+      for i=j:n
+         if !(B[i,j] ≈ 0.0)
+            @test B[i,j] ≈ C[i,j]
+         end
+      end
+   end
+end

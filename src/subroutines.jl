@@ -565,30 +565,58 @@ function Sparseinv!(neq,Lia,Lja,La)
    # initialization
    TMPLj = zeros(eltype(La),neq)
    TMPZj = zeros(eltype(La),neq)
+   touched = zeros(eltype(Lja),neq)
+   istouched = falses(neq)
+   ntouched = 0
+
    # column-wise update
    for j=neq:-1:1
+      ntouched = 0
       kfst = Lia[j]
       klst = Lia[j+1]-1
       Dj = La[kfst]
       if Dj<=0.0
          continue
       end
+
+      ntouched = ntouched + 1
+      touched[ntouched] = j
+      istouched[j] = true
       TMPZj[j] = 1.0/Dj
       for k=kfst+1:klst
          i = Lja[k]
          TMPLj[i] = La[k]
       end
+
       for kk=kfst+1:klst
          k = Lja[kk]
          ifst = Lia[k]
          ilst = Lia[k+1]-1
+         # If TMPZj[i] was written during this column,
+         # then i must be recorded and cleared before
+         # the next column.
          # diagonal element of column k (k==i)
          i = Lja[ifst]
+         if !istouched[i]
+            ntouched = ntouched + 1
+            touched[ntouched] = i
+            istouched[i] = true
+         end
          TMPZj[i] = TMPZj[i] - TMPLj[i]*La[ifst]
          # off diagonal elements
          for ii=ifst+1:ilst
             i = Lja[ii]
+            if !istouched[i]
+               ntouched = ntouched + 1
+               touched[ntouched] = i
+               istouched[i] = true
+            end
             TMPZj[i] = TMPZj[i] - TMPLj[k]*La[ii]
+            if !istouched[k]
+               ntouched = ntouched + 1
+               touched[ntouched] = k
+               istouched[k] = true
+            end
             TMPZj[k] = TMPZj[k] - TMPLj[i]*La[ii]
          end
       end
@@ -603,7 +631,15 @@ function Sparseinv!(neq,Lia,Lja,La)
       for kk=kfst:klst
          k = Lja[kk]
          La[kk] = TMPZj[k]
+      end
+      # reset all touched temporary values
+      # NOTE: TMPZj is not only written at entries
+      # that will be saved for the current column.
+      # So clearing only saved entries is insufficient.
+      for kk=1:ntouched
+         k = touched[kk]
          TMPZj[k] = 0.0
+         istouched[k] = false
       end
    end
    return nothing
